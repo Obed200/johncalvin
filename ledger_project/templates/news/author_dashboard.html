@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Author dashboard — THE LEDGER{% endblock %}
+{% block content %}
+<div class="wrap dash">
+  <div class="dash-head">
+    <div>
+      <div class="dash-role">Author dashboard</div>
+      <div class="dash-title">Welcome, {{ user.profile.display_name }}</div>
+    </div>
+    <a class="btn" href="{% url 'news:home' %}">View site →</a>
+  </div>
+  <div class="dash-grid">
+    <div class="panel">
+      <h3>Write a new story</h3>
+      <div class="phint">Published stories appear on the front page immediately.</div>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="{{ form.title.id_for_label }}">Headline</label>
+        {{ form.title }}{{ form.title.errors }}
+
+        <label for="{{ form.category.id_for_label }}">Section</label>
+        {{ form.category }}{{ form.category.errors }}
+
+        <label for="{{ form.dek.id_for_label }}">Dek (one-sentence summary)</label>
+        {{ form.dek }}{{ form.dek.errors }}
+
+        <label for="{{ form.photos.id_for_label }}">Photos</label>
+        {{ form.photos }}
+        <div class="helptext">{{ form.photos.help_text }}</div>
+        {{ form.photos.errors }}
+        {{ form.main_photo_index }}
+        <div class="photo-picker" id="photo-picker" hidden>
+          <div class="phint">Choose the spotlight image — it leads the story on the front page.</div>
+          <div class="photo-picker-grid" id="photo-picker-grid"></div>
+        </div>
+
+        <label for="{{ form.body.id_for_label }}">Story</label>
+        {{ form.body }}
+        <div class="helptext">{{ form.body.help_text }}</div>
+        {{ form.body.errors }}
+
+        <div class="check-row">
+          {{ form.allow_links }}
+          <label class="check-label" for="{{ form.allow_links.id_for_label }}">
+            {{ form.allow_links.label }}
+            <span class="helptext">{{ form.allow_links.help_text }}</span>
+          </label>
+        </div>
+        <div class="check-row">
+          {{ form.embed_videos }}
+          <label class="check-label" for="{{ form.embed_videos.id_for_label }}">
+            {{ form.embed_videos.label }}
+            <span class="helptext">{{ form.embed_videos.help_text }}</span>
+          </label>
+        </div>
+
+        <div style="margin-top:16px;"><button class="btn btn-solid" style="width:100%;" type="submit">Publish story</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h3>Your stories</h3>
+      <div class="phint">{{ articles|length }} published</div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Headline</th><th>Section</th><th>Media</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          {% for a in articles %}
+          <tr>
+            <td><a href="{{ a.get_absolute_url }}">{{ a.title|truncatechars:50 }}</a></td>
+            <td>{{ a.category }}</td>
+            <td class="media-cell">
+              {% if a.photo_count %}{{ a.photo_count }} photo{{ a.photo_count|pluralize }}{% endif %}
+              {% if a.has_video %}{% if a.photo_count %} · {% endif %}▶ video{% endif %}
+              {% if not a.photo_count and not a.has_video %}—{% endif %}
+            </td>
+            <td>{{ a.created_at|date:"M j, Y" }}</td>
+            <td class="row-actions">
+              <a class="link-edit" href="{{ a.get_edit_url }}">Edit</a>
+              <form method="post" action="{% url 'news:delete_article' a.pk %}" onsubmit="return confirm('Delete this story?');">
+                {% csrf_token %}
+                <button type="submit" class="link-del">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="color:var(--muted);">Nothing published yet — write your first story.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      <div class="tips">
+        <h4>Adding links and video</h4>
+        <ul>
+          <li>Paste a web address anywhere in the story and it becomes a link.</li>
+          <li>To link a phrase, write <code>[the full report](https://example.com/report)</code>.</li>
+          <li>Put a YouTube address on a line of its own and it plays on the page. Add
+              <code>[Caption](https://youtu.be/…)</code> to caption it.</li>
+          <li>The two switches under the story box turn links and video players off if you'd
+              rather show plain addresses.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Preview the photos an author picked and let them choose the spotlight image.
+(function () {
+  var input = document.getElementById('{{ form.photos.id_for_label }}');
+  var hidden = document.getElementById('{{ form.main_photo_index.id_for_label }}');
+  var picker = document.getElementById('photo-picker');
+  var grid = document.getElementById('photo-picker-grid');
+  if (!input || !picker || !grid || !hidden) return;
+
+  input.addEventListener('change', function () {
+    grid.textContent = '';
+    var files = Array.prototype.slice.call(input.files || []);
+    picker.hidden = files.length === 0;
+    hidden.value = '0';
+
+    files.forEach(function (file, index) {
+      var label = document.createElement('label');
+      label.className = 'photo-choice';
+
+      var radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'main_photo_preview';
+      radio.value = String(index);
+      radio.checked = index === 0;
+      radio.addEventListener('change', function () { hidden.value = radio.value; });
+
+      var img = document.createElement('img');
+      img.alt = file.name;
+      img.src = URL.createObjectURL(file);
+      img.addEventListener('load', function () { URL.revokeObjectURL(img.src); });
+
+      var caption = document.createElement('span');
+      caption.className = 'photo-choice-name';
+      caption.textContent = 'Spotlight';
+
+      label.appendChild(radio);
+      label.appendChild(img);
+      label.appendChild(caption);
+      grid.appendChild(label);
+    });
+  });
+})();
+</script>
+{% endblock %}

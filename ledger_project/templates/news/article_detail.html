@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — THE LEDGER{% endblock %}
+{% block content %}
+<div class="wrap article-detail">
+  <a class="back-link" href="{% url 'news:home' %}">← Spotlight</a>
+  <div class="detail-head">
+    <div class="eyebrow cat-{{ article.category }}">{{ article.category }}</div>
+    {% if user.is_authenticated %}
+      {% if user == article.author or user.profile.is_admin %}
+        <a class="btn btn-small" href="{{ article.get_edit_url }}">Edit story</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  <h1>{{ article.title }}</h1>
+  <div class="dek">{{ article.dek }}</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="avatar">
+      {% if article.author.profile.avatar %}
+        <img src="{{ article.author.profile.avatar.url }}" alt="{{ article.author.profile.display_name }}">
+      {% else %}
+        {{ article.author.profile.display_name|default:article.author.username|slice:":2"|upper }}
+      {% endif %}
+    </div>
+    <div>
+      <div class="byline" style="font-weight:600;">{{ article.author.profile.display_name|default:article.author.username }}</div>
+      <div class="byline">{{ article.created_at|date:"M j, Y" }}{% if article.author.profile.bio %} · {{ article.author.profile.bio }}{% endif %}</div>
+    </div>
+  </div>
+
+  {% with photo=article.main_photo %}
+    {% if photo %}
+      <figure class="lead-photo">
+        <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:article.title }}">
+        {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+      </figure>
+    {% endif %}
+  {% endwith %}
+
+  <hr class="rule" style="margin:22px 0;">
+  <div class="article-body">{{ article.body_html }}</div>
+
+  {% with gallery=article.gallery_photos %}
+    {% if gallery %}
+      <section class="gallery-block">
+        <h2 class="gallery-title">More photos</h2>
+        <div class="gallery">
+          {% for photo in gallery %}
+            <figure>
+              <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:article.title }}" loading="lazy">
+              {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+            </figure>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endwith %}
+</div>
+{% endblock %}

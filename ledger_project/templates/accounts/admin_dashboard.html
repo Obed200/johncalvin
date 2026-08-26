@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard — THE LEDGER{% endblock %}
+{% block content %}
+<div class="wrap dash">
+  <div class="dash-head">
+    <div>
+      <div class="dash-role">Administrator dashboard</div>
+      <div class="dash-title">Welcome, {{ user.profile.display_name }}</div>
+    </div>
+    <a class="btn" href="{% url 'news:home' %}">View site →</a>
+  </div>
+  <div class="dash-grid">
+    <div class="panel">
+      <h3>Create an author account</h3>
+      <div class="phint">Give a writer their own byline, sign-in and photo.</div>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="{{ form.first_name.id_for_label }}">Full name</label>
+        {{ form.first_name }}{{ form.first_name.errors }}
+
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}{{ form.username.errors }}
+
+        <label for="{{ form.email.id_for_label }}">Email (optional)</label>
+        {{ form.email }}{{ form.email.errors }}
+
+        <label for="{{ form.password1.id_for_label }}">Password</label>
+        {{ form.password1 }}{{ form.password1.errors }}
+
+        <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+        {{ form.password2 }}{{ form.password2.errors }}
+
+        <label for="{{ form.avatar.id_for_label }}">Author photo</label>
+        {{ form.avatar }}
+        <div class="helptext">Optional. Shown next to their byline and in the author list.</div>
+
+        <label for="{{ form.bio.id_for_label }}">Short bio</label>
+        {{ form.bio }}{{ form.bio.errors }}
+
+        <div style="margin-top:16px;"><button class="btn btn-solid" style="width:100%;" type="submit">Create author account</button></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h3>Accounts</h3>
+      <div class="phint">{{ authors|length }} author{{ authors|length|pluralize }}</div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Stories</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td>{{ user.profile.display_name }}</td>
+            <td>{{ user.username }}</td>
+            <td><span class="tag tag-admin">Administrator</span></td>
+            <td>{{ user.articles.count }}</td>
+            <td></td>
+          </tr>
+          {% for p in authors %}
+          <tr>
+            <td>{{ p.display_name }}</td>
+            <td>{{ p.user.username }}</td>
+            <td><span class="tag tag-author">Author</span></td>
+            <td>{{ p.user.articles.count }}</td>
+            <td>
+              <form method="post" action="{% url 'accounts:remove_author' p.user.id %}" onsubmit="return confirm('Remove this account? Their stories stay published.');">
+                {% csrf_token %}
+                <button type="submit" class="link-del">Remove</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      <h3 style="margin-top:28px;">All stories</h3>
+      <div class="phint">Feature a story to make it the front-page lead.</div>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Headline</th><th>Author</th><th>Section</th><th>Media</th><th></th><th></th></tr></thead>
+        <tbody>
+          {% for a in articles %}
+          <tr>
+            <td><a href="{{ a.get_absolute_url }}">{{ a.title|truncatechars:50 }}</a></td>
+            <td>{{ a.author.profile.display_name|default:a.author.username }}</td>
+            <td>{{ a.category }}</td>
+            <td class="media-cell">
+              {% if a.photo_count %}{{ a.photo_count }} photo{{ a.photo_count|pluralize }}{% endif %}
+              {% if a.has_video %}{% if a.photo_count %} · {% endif %}▶ video{% endif %}
+              {% if not a.photo_count and not a.has_video %}—{% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'news:toggle_featured' a.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="link-del" style="color:{% if a.featured %}var(--green){% else %}var(--muted){% endif %};">{% if a.featured %}Featured{% else %}Feature{% endif %}</button>
+              </form>
+            </td>
+            <td class="row-actions">
+              <a class="link-edit" href="{{ a.get_edit_url }}">Edit</a>
+              <form method="post" action="{% url 'news:delete_article' a.pk %}" onsubmit="return confirm('Delete this story?');">
+                {% csrf_token %}
+                <button type="submit" class="link-del">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

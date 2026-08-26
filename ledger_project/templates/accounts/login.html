@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Sign in — THE LEDGER{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="auth-wrap">
+    <h2>Sign in</h2>
+    <div class="sub">Administrators and authors use the same form.</div>
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username }}
+      {{ form.username.errors }}
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+      {{ form.password.errors }}
+      <div style="margin-top:18px;"><button class="btn btn-solid" style="width:100%;" type="submit">Sign in</button></div>
+    </form>
+    <div class="credential-box">
+      Enter correct login credentials<br>
+      <strong>Username and Password</strong>
+    </div>
+  </div>
+</div>
+{% endblock %}

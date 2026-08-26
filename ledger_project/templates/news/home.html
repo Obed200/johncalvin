@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+{% if not featured %}
+  <div class="wrap"><div class="empty-note">
+    No stories in {{ active_category }} yet.
+    {% if user.is_authenticated %}<a href="{% url 'news:author_dashboard' %}">Publish one from your dashboard</a>.{% else %}<a href="{% url 'accounts:login' %}">Sign in</a> as an author to publish one.{% endif %}
+  </div></div>
+{% else %}
+
+<section class="hero"><div class="wrap hero-grid">
+  <div>
+    {% with photo=featured.main_photo %}
+    <a class="story-tease hero-tease" href="{{ featured.get_absolute_url }}">
+      {% if photo %}
+        <div class="hero-media">
+          <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:featured.title }}">
+          {% if featured.photo_count > 1 or featured.has_video %}
+            <span class="media-badge">
+              {% if featured.photo_count > 1 %}{{ featured.photo_count }} photos{% endif %}
+              {% if featured.photo_count > 1 and featured.has_video %} · {% endif %}
+              {% if featured.has_video %}▶ Video{% endif %}
+            </span>
+          {% endif %}
+        </div>
+      {% endif %}
+      <div class="eyebrow hero-eyebrow">{{ featured.category }}</div>
+      <h1>{{ featured.title }}</h1>
+      <div class="dek">{{ featured.dek }}</div>
+    </a>
+    {% endwith %}
+    <div class="byline">By {{ featured.author.profile.display_name|default:featured.author.username }} · {{ featured.created_at|date:"M j, Y" }}</div>
+  </div>
+  <div class="hero-side">
+    {% for s in side_stories %}
+      <div class="story">
+        <a class="story-tease" href="{{ s.get_absolute_url }}">
+          {% with photo=s.main_photo %}
+            {% if photo %}<div class="thumb"><img src="{{ photo.image.url }}" alt="{{ photo.caption|default:s.title }}"></div>{% endif %}
+          {% endwith %}
+          <div class="eyebrow cat-{{ s.category }}">{{ s.category }}</div>
+          <h3>{{ s.title }}</h3>
+          <div class="dek-sm">{{ s.dek|truncatechars:90 }}</div>
+        </a>
+        <div class="byline">By {{ s.author.profile.display_name|default:s.author.username }} · {{ s.created_at|date:"M j, Y" }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div></section>
+
+<section class="section wrap">
+  <div class="content-cols">
+    <div>
+      <div class="section-head">
+        <div class="section-title">Latest Stories</div>
+      </div>
+      {% if grid_stories %}
+      <div class="article-grid">
+        {% for s in grid_stories %}
+          <div class="card">
+            <a class="story-tease" href="{{ s.get_absolute_url }}">
+              {% with photo=s.main_photo %}
+                {% if photo %}
+                  <div class="card-media">
+                    <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:s.title }}">
+                    {% if s.photo_count > 1 or s.has_video %}
+                      <span class="media-badge">
+                        {% if s.photo_count > 1 %}{{ s.photo_count }} photos{% endif %}
+                        {% if s.photo_count > 1 and s.has_video %} · {% endif %}
+                        {% if s.has_video %}▶ Video{% endif %}
+                      </span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endwith %}
+              <div class="eyebrow cat-{{ s.category }}">{{ s.category }}</div>
+              <h3>{{ s.title }}</h3>
+              <div class="dek-sm">{{ s.dek|truncatechars:110 }}</div>
+            </a>
+            <div class="byline">By {{ s.author.profile.display_name|default:s.author.username }} · {{ s.created_at|date:"M j, Y" }}</div>
+          </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="empty-note">More stories will appear here as authors publish.</div>
+      {% endif %}
+    </div>
+    <div>
+      <div class="widget">
+        <h4>Sections</h4>
+        <div class="section-links">
+          <a href="{% url 'news:home' %}" class="{% if active_category == 'All' %}active{% endif %}">All stories</a>
+          {% for c in categories %}
+            <a href="{% url 'news:home' %}?category={{ c }}" class="{% if active_category == c %}active{% endif %}">{{ c }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="widget">
+        <h4>Market Pulse</h4>
+        <div class="pulse-row"><span>S&amp;P Composite</span><span class="up">+0.9%</span></div>
+        <div class="pulse-row"><span>Nasdaq Tech</span><span class="up">+1.4%</span></div>
+        <div class="pulse-row"><span>10-Yr Treasury</span><span class="down">4.18%</span></div>
+        <div class="pulse-row"><span>Brent Crude</span><span class="up">$83.10</span></div>
+        <div class="pulse-row"><span>Gold</span><span class="down">$2,378</span></div>
+      </div>
+      <div class="widget">
+        <h4>Our Authors</h4>
+        {% for a in authors %}
+          <div class="author-item">
+            <div class="avatar">
+              {% if a.avatar %}<img src="{{ a.avatar.url }}" alt="{{ a.display_name }}">{% else %}{{ a.display_name|slice:":2"|upper }}{% endif %}
+            </div>
+            <div><div class="an">{{ a.display_name }}</div><div class="ar">{{ a.bio|default:"Contributing author" }}</div></div>
+          </div>
+        {% empty %}
+          <div class="ar" style="font-family:'IBM Plex Sans',sans-serif;">No author accounts yet — the administrator can create one from the dashboard.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

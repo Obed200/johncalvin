@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Edit — {{ article.title }} — THE LEDGER{% endblock %}
+{% block content %}
+<div class="wrap dash">
+  <div class="dash-head">
+    <div>
+      <div class="dash-role">Editing story</div>
+      <div class="dash-title">{{ article.title|truncatechars:60 }}</div>
+    </div>
+    <a class="btn" href="{{ article.get_absolute_url }}">View story →</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="dash-grid">
+      <div class="panel">
+        <h3>Story</h3>
+        <div class="phint">Changes go live as soon as you save.</div>
+
+        <label for="{{ form.title.id_for_label }}">Headline</label>
+        {{ form.title }}{{ form.title.errors }}
+
+        <label for="{{ form.category.id_for_label }}">Section</label>
+        {{ form.category }}{{ form.category.errors }}
+
+        <label for="{{ form.dek.id_for_label }}">Dek (one-sentence summary)</label>
+        {{ form.dek }}{{ form.dek.errors }}
+
+        <label for="{{ form.body.id_for_label }}">Story</label>
+        {{ form.body }}
+        <div class="helptext">{{ form.body.help_text }}</div>
+        {{ form.body.errors }}
+
+        <div class="check-row">
+          {{ form.allow_links }}
+          <label class="check-label" for="{{ form.allow_links.id_for_label }}">
+            {{ form.allow_links.label }}
+            <span class="helptext">{{ form.allow_links.help_text }}</span>
+          </label>
+        </div>
+        <div class="check-row">
+          {{ form.embed_videos }}
+          <label class="check-label" for="{{ form.embed_videos.id_for_label }}">
+            {{ form.embed_videos.label }}
+            <span class="helptext">{{ form.embed_videos.help_text }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Photos</h3>
+        <div class="phint">
+          {{ article.photo_count }} photo{{ article.photo_count|pluralize }} on this story —
+          pick the one that leads it on the Spotlight.
+        </div>
+
+        {{ formset.management_form }}
+        {% if formset.forms %}
+          <div class="photo-manager">
+            {% for photo_form in formset %}
+              {% with photo=photo_form.instance %}
+              <div class="photo-manage">
+                {{ photo_form.id }}
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:article.title }}">
+                <div class="photo-manage-fields">
+                  <label class="radio-label">
+                    <input type="radio" name="main_photo" value="{{ photo.pk }}" {% if photo.is_main %}checked{% endif %}>
+                    Spotlight image
+                  </label>
+                  {{ photo_form.caption }}
+                  {{ photo_form.caption.errors }}
+                  <label class="check-label small">
+                    {{ photo_form.DELETE }} Remove this photo
+                  </label>
+                </div>
+              </div>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="helptext" style="margin-bottom:14px;">No photos yet.</div>
+        {% endif %}
+
+        <label for="{{ form.photos.id_for_label }}">Add more photos</label>
+        {{ form.photos }}
+        <div class="helptext">{{ form.photos.help_text }}</div>
+        {{ form.photos.errors }}
+        {{ form.main_photo_index }}
+      </div>
+    </div>
+
+    <div class="edit-actions">
+      <button class="btn btn-solid" type="submit">Save changes</button>
+      <a class="btn" href="{% url 'news:author_dashboard' %}">Back to dashboard</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
